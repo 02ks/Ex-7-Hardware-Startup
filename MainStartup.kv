@@ -1,0 +1,14 @@
+<MainScreen>:
+    name: 'main'
+    FloatLayout:
+        size_hint: None, None
+
+    DPEAButton:
+        size: 100, 100
+        color: 1, 0, 1, 1
+        font_size: 60
+        text: 'Motor On/Off'
+        x: root.width * 0.5
+        y: root.height * 0.5
+        on_press: root.motor()
+
