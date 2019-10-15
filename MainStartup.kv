@@ -1,14 +1,55 @@
 <MainScreen>:
     name: 'main'
+    watch: watch
     FloatLayout:
         size_hint: None, None
 
     DPEAButton:
         size: 100, 100
-        color: 1, 0, 1, 1
+        color: 0, 0, 1, 1
         font_size: 60
         text: 'Motor On/Off'
         x: root.width * 0.5
         y: root.height * 0.5
         on_press: root.motor()
-
+    DPEAButton:
+        size: 100, 100
+        color: 0, 0, 1, 1
+        font_size: 60
+        text: 'Motor Direction'
+        x: root.width * 0.2
+        y: root.height * 0.5
+        on_press: root.motor2()
+    DPEAButton:
+        size: 50, 50
+        color: 0, 0, 1, 1
+        font_size: 60
+        text: 'Shutdown'
+        x: root.width * 0.2
+        y: root.height * 0.2
+        on_press: root.exit_program()
+    DPEAButton:
+        size: 100, 100
+        color: 0, 0, 1, 1
+        font_size: 60
+        text: 'Run Sequence'
+        x: root.width * 0.1
+        y: root.height * 0.5
+        on_press: root.upspec()
+    Slider:
+        id: slr
+        min: 0
+        max: 2000
+        size_hint: 0.4, 0.2
+        step: 1
+        x: root.width * 0.35
+        y: root.height * 0.25
+        orientation: 'vertical'
+        on_touch_move: root.move()
+    Label:
+        id: watch
+        color: 0, 0, 1, 1
+        font_size: 60
+        text: 'Current Position:'
+        x: root.width * -0.4
+        y: root.height * 0.1
