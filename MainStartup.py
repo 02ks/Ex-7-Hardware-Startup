@@ -6,13 +6,14 @@ import spidev
 import os
 from time import sleep
 spi = spidev.SpiDev()
+from Slush.Devices import L6470Registers
 import RPi.GPIO as GPIO
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.slider import Slider
-
+from pidev.Cyprus_Commands import Cyprus_Commands_RPi as cyprus
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
 from pidev.kivy.PauseScreen import PauseScreen
@@ -24,6 +25,7 @@ MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
 
 SCREEN_MANAGER = ScreenManager()
 MAIN_SCREEN_NAME = 'main'
+GAMER_SCREEN_NAME = 'gamer'
 
 
 class ProjectNameGUI(App):
@@ -82,14 +84,11 @@ class MainScreen(Screen):
             s0.run(dir, speed)
             on = False
             print ('moving')
-        elif on == False:
+        else:
             s0.softStop()
             s0.free_all()
             on = True
             print('stopped')
-        else:
-            s0.run(dir, 1000)
-            on = True
     def spec(self):
         global thing
         self.watch.text = "Current Position: %d" % s0.get_position_in_units()
@@ -109,6 +108,7 @@ class MainScreen(Screen):
         self.watch.text = "Current Position: %d" % s0.get_position_in_units()
         sleep(10)
         s0.goHome()
+        
         self.watch.text = "Current Position: %d" % s0.get_position_in_units()
         thing = True
     def upspec(self):
@@ -119,7 +119,7 @@ class MainScreen(Screen):
             print("can't use this again")
 
     def move(self):
-        if on == True:
+        if on == False:
             global speed
             speed = self.ids.slr.value
             self.motor()
@@ -133,8 +133,62 @@ class MainScreen(Screen):
         GPIO.cleanup()
         quit()
 
+    def page(self):
+        SCREEN_MANAGER.current = GAMER_SCREEN_NAME
+
+global xp
+xp = 1
+class GamerScreen(Screen):
+
+    def __init__(self, **kwargs):
+        super(GamerScreen, self).__init__(**kwargs)
+
+    cyprus.initialize()
+    cyprus.setup_servo(1)
+
+    def startthread(self):
+        Thread(target=self.run2).start()
+
+    def exit_program(self):
+        cyprus.set_servo_position(1, .5)
+        cyprus.close()
+        spi.close()
+        GPIO.cleanup()
+        quit()
+
+    def run3(self):
+        cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+        global xp
+        if xp == 1:
+            cyprus.set_servo_position(1, .55)
+            print('h')
+            xp = 0
+        else:
+            cyprus.set_servo_position(1, .45)
+            print('l')
+            xp = 1
+
+    def run1(self):
+        cyprus.set_servo_position(1, 1)
+        sleep(1)
+
+    def run2(self):
+        while True:
+            if (cyprus.read_gpio() & 0b0001)==1:
+                sleep(0.1)
+                if (cyprus.read_gpio() & 0b0001)==1:
+                    print('a-')
+                    cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+                    cyprus.set_servo_position(1, .5)
+            else:
+                print('none')
+                cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+                cyprus.set_servo_position(1, .55)
+
+            sleep(1/200)
 
 Builder.load_file('MainStartup.kv')
+SCREEN_MANAGER.add_widget(GamerScreen(name=GAMER_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
 
 
@@ -154,6 +208,8 @@ if __name__ == "__main__":
     # Window.fullscreen = 'auto'
     ProjectNameGUI().run()
 
+cyprus.set_servo_position(1, .5)
+cyprus.close()
 s0.free_all()
 spi.close()
 GPIO.cleanup()
