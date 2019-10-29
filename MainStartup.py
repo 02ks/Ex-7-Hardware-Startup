@@ -137,7 +137,9 @@ class MainScreen(Screen):
         SCREEN_MANAGER.current = GAMER_SCREEN_NAME
 
 global xp
+global spd
 xp = 1
+spd = 0.5
 class GamerScreen(Screen):
 
     def __init__(self, **kwargs):
@@ -169,8 +171,17 @@ class GamerScreen(Screen):
             xp = 1
 
     def run1(self):
-        cyprus.set_servo_position(1, 1)
-        sleep(1)
+        global spd
+        cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+        while spd < 1:
+            cyprus.set_servo_position(1, spd)
+            sleep(1)
+            if spd < 1:
+                spd = spd + 0.025
+                print('%s' % spd)
+            elif spd == 1:
+               spd = 0.5
+               print('done')
 
     def run2(self):
         while True:
